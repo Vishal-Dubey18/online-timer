@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 
+const ALARM_SRC = '/alarm.mp3'; // Place your alarm.mp3 in public/
+
 /**
  * Custom hook for alarm sound functionality
  * @returns {object} Alarm state and controls
@@ -11,25 +13,32 @@ export const useAlarm = () => {
   // Preload alarm sound
   const preloadAlarm = useCallback(() => {
     if (!audioRef.current) {
-      audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+Trs2McBjiP1/LMeSwFJHfH8N+SPAoZYLzp6adVFA5LoeDtt2ceBzWK0/LQfTAFJHfH8N+SPAoZYLzp6adVFA5LoeDtt2ceBzWK0/LQfTA=');
-      audioRef.current.volume = 0.7;
-      audioRef.current.preload = 'auto';
+      const audio = new window.Audio(ALARM_SRC);
+      audio.volume = 0.8;
+      audio.preload = 'auto';
+      audioRef.current = audio;
+      // Try to play and pause to unlock on some browsers
+      audio.play().then(() => audio.pause()).catch(() => {});
     }
   }, []);
 
   const playAlarm = useCallback(() => {
-    if (!isMuted && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(error => {
-        console.warn('Audio play failed:', error);
-      });
+    if (isMuted) return;
+    if (audioRef.current) {
+      try {
+        audioRef.current.currentTime = 0;
+        audioRef.current.volume = 0.8;
+        audioRef.current.play().catch(() => {});
+      } catch (e) {}
     }
   }, [isMuted]);
 
   const stopAlarm = useCallback(() => {
     if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+      try {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      } catch (e) {}
     }
   }, []);
 
@@ -53,7 +62,6 @@ export const useAlarm = () => {
         const permission = await Notification.requestPermission();
         return permission === 'granted';
       } catch (error) {
-        console.warn('Notification permission request failed:', error);
         return false;
       }
     }
@@ -67,7 +75,7 @@ export const useAlarm = () => {
     toggleMute,
     showNotification,
     requestNotificationPermission,
-    preloadAlarm
+    preloadAlarm,
   };
 };
 

@@ -12,17 +12,25 @@ const Header = () => {
     // Check system preference or saved theme
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
     const theme = savedTheme === 'light' ? 'light' : savedTheme === 'dark' ? 'dark' : systemPrefersDark ? 'dark' : 'light';
-    
     setIsDark(theme === 'dark');
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    // Toggle dark class on <html>
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, []);
 
   const toggleTheme = () => {
     const newIsDark = !isDark;
     setIsDark(newIsDark);
-    document.documentElement.classList.toggle('dark', newIsDark);
+    // Toggle dark class on <html>
+    if (newIsDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
     localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
   };
 

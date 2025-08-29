@@ -1,11 +1,23 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useCountdown } from '../hooks/useTimer';
 import { formatTime, calculatePercentage } from '../utils/time';
 import TimeInput from './TimeInput';
 import ProgressRing from './ProgressRing';
-import { Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, RotateCcw, Volume2, VolumeX, Settings } from 'lucide-react';
+import { useAlarm } from '../hooks/useAlarm.js';
 
-const ALARM_SRC = '/alarm.mp3'; // Place a short mp3 in public/alarm.mp3
+const PRESETS = [
+  { label: '1 min', value: 60 },
+  { label: '5 min', value: 300 },
+  { label: '10 min', value: 600 },
+  { label: '15 min', value: 900 },
+  { label: '30 min', value: 1800 },
+  { label: '1 hour', value: 3600 },
+];
+
+const RECENTS_KEY = 'timer_recents';
+
+const ALARM_LABEL = "Timer Complete!";
 
 /**
  * Countdown Component
@@ -14,9 +26,19 @@ const ALARM_SRC = '/alarm.mp3'; // Place a short mp3 in public/alarm.mp3
 const Countdown = () => {
   const [initialTime, setInitialTime] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const audioRef = useRef(null);
-  const fadeTimer = useRef(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [recents, setRecents] = useState([]);
+
+  // Use alarm hook
+  const {
+    isMuted,
+    playAlarm,
+    stopAlarm,
+    toggleMute,
+    showNotification,
+    requestNotificationPermission,
+    preloadAlarm,
+  } = useAlarm();
 
   const {
     time,
@@ -31,64 +53,54 @@ const Countdown = () => {
 
   const progress = calculatePercentage(time, initialTime);
 
-  // Preload alarm sound
+  // Load recents from localStorage
   useEffect(() => {
-    if (!audioRef.current) {
-      audioRef.current = new window.Audio(ALARM_SRC);
-      audioRef.current.volume = 0;
-      audioRef.current.preload = 'auto';
-    }
+    const stored = localStorage.getItem(RECENTS_KEY);
+    if (stored) setRecents(JSON.parse(stored));
   }, []);
 
-  // Fade-in alarm sound
-  function playAlarm() {
-    if (isMuted || !audioRef.current) return;
-    audioRef.current.currentTime = 0;
-    audioRef.current.volume = 0;
-    audioRef.current.play().catch(() => {});
-    let v = 0;
-    clearInterval(fadeTimer.current);
-    fadeTimer.current = setInterval(() => {
-      v += 0.07;
-      if (audioRef.current) audioRef.current.volume = Math.min(1, v);
-      if (v >= 1) clearInterval(fadeTimer.current);
-    }, 60);
-  }
-
-  function stopAlarm() {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current.volume = 0;
+  // Save recents to localStorage
+  useEffect(() => {
+    if (initialTime > 0 && !recents.includes(initialTime)) {
+      const updated = [initialTime, ...recents].slice(0, 5);
+      setRecents(updated);
+      localStorage.setItem(RECENTS_KEY, JSON.stringify(updated));
     }
-    clearInterval(fadeTimer.current);
-  }
+    // eslint-disable-next-line
+  }, [initialTime]);
+
+  // Preload alarm sound and request notification permission on mount
+  useEffect(() => {
+    preloadAlarm();
+    requestNotificationPermission();
+    // eslint-disable-next-line
+  }, []);
 
   function handleTimerComplete() {
     playAlarm();
     setShowAlert(true);
-    // Browser notification
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Timer Complete!', {
-        body: 'Your countdown timer has finished.',
-        icon: '/favicon.ico'
-      });
-    }
+    showNotification(ALARM_LABEL, {
+      body: 'Your countdown timer has finished.',
+      icon: '/favicon.ico'
+    });
   }
 
   // Stop alarm when reset or alert closed
   useEffect(() => {
     if (!showAlert) stopAlarm();
-  }, [showAlert]);
-
-  // Request notification permission on mount
-  useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-  }, []);
+  }, [showAlert, stopAlarm]);
 
   const handleTimeSet = (seconds) => {
+    setInitialTime(seconds);
+    setTime(seconds);
+  };
+
+  const handlePreset = (seconds) => {
+    setInitialTime(seconds);
+    setTime(seconds);
+  };
+
+  const handleRecent = (seconds) => {
     setInitialTime(seconds);
     setTime(seconds);
   };
@@ -110,9 +122,18 @@ const Countdown = () => {
   const timerState = getTimerState();
 
   return (
-    <div className="glass-card max-w-md mx-auto fade-in">
-      {/* Digital Clock Display */}
-      <div className="time-big mt-4 mb-2">{formatTime(time)}</div>
+    <div className="glass-card max-w-md mx-auto fade-in" aria-label="Countdown Timer">
+      <div className="flex justify-between items-center mb-2">
+        <span className="font-bold text-lg">Countdown Timer</span>
+        <button
+          className="glass-button p-2"
+          aria-label="Settings"
+          onClick={() => setShowSettings(true)}
+        >
+          <Settings size={20} />
+        </button>
+      </div>
+      <div className="time-big mt-2 mb-2" aria-live="polite">{formatTime(time)}</div>
       <div className="flex justify-center mb-4">
         <ProgressRing
           progress={progress}
@@ -121,6 +142,36 @@ const Countdown = () => {
           color={timerState === 'complete' ? '#ef4444' : '#3b82f6'}
         />
       </div>
+      {/* Preset Buttons */}
+      {timerState === 'idle' && (
+        <div className="flex flex-wrap gap-2 justify-center mb-4">
+          {PRESETS.map(p => (
+            <button
+              key={p.value}
+              className="preset-btn"
+              onClick={() => handlePreset(p.value)}
+              aria-label={`Set timer to ${p.label}`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {/* Recent Timers */}
+      {timerState === 'idle' && recents.length > 0 && (
+        <div className="flex flex-wrap gap-2 justify-center mb-2">
+          {recents.map((sec, i) => (
+            <button
+              key={i}
+              className="preset-btn"
+              onClick={() => handleRecent(sec)}
+              aria-label={`Set timer to ${formatTime(sec)}`}
+            >
+              {formatTime(sec)}
+            </button>
+          ))}
+        </div>
+      )}
       {/* Time Input */}
       {timerState === 'idle' && (
         <div className="mb-6">
@@ -130,35 +181,36 @@ const Countdown = () => {
       {/* Controls */}
       <div className="controls">
         {timerState === 'idle' && initialTime > 0 && (
-          <button onClick={start} className="btn primary">
+          <button onClick={start} className="btn primary" aria-label="Start timer">
             <Play size={18} /> Start
           </button>
         )}
         {timerState === 'running' && (
-          <button onClick={pause} className="btn warn">
+          <button onClick={pause} className="btn warn" aria-label="Pause timer">
             <Pause size={18} /> Pause
           </button>
         )}
         {timerState === 'paused' && (
-          <button onClick={resume} className="btn success">
+          <button onClick={resume} className="btn success" aria-label="Resume timer">
             <Play size={18} /> Resume
           </button>
         )}
         {(timerState === 'running' || timerState === 'paused' || timerState === 'complete') && (
-          <button onClick={handleReset} className="btn danger">
+          <button onClick={handleReset} className="btn danger" aria-label="Reset timer">
             <RotateCcw size={18} /> Reset
           </button>
         )}
         <button
-          onClick={() => setIsMuted((m) => !m)}
+          onClick={toggleMute}
           className="btn"
           title={isMuted ? 'Unmute alarm' : 'Mute alarm'}
+          aria-label={isMuted ? 'Unmute alarm' : 'Mute alarm'}
         >
           {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>
       </div>
       {/* Status */}
-      <div className="text-center text-xs text-gray-400 mt-2 mb-2">
+      <div className="text-center text-xs text-gray-400 mt-2 mb-2" aria-live="polite">
         {timerState === 'complete'
           ? 'Timer Complete!'
           : timerState === 'running'
@@ -169,12 +221,8 @@ const Countdown = () => {
       </div>
       {/* Fade-in Alert Modal */}
       {showAlert && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          aria-modal="true"
-          role="alertdialog"
-        >
-          <div className="glass-card p-8 fade-in max-w-xs text-center">
+        <div className="modal-bg" aria-modal="true" role="alertdialog">
+          <div className="modal-card">
             <div className="text-3xl mb-2 text-red-400 font-bold">⏰</div>
             <div className="text-xl font-semibold mb-2 text-white">Time's Up!</div>
             <div className="text-gray-300 mb-4">Your countdown timer has finished.</div>
@@ -188,8 +236,29 @@ const Countdown = () => {
           </div>
         </div>
       )}
-      {/* Hidden audio element */}
-      <audio ref={audioRef} src={ALARM_SRC} preload="auto" style={{ display: 'none' }} />
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="modal-bg" aria-modal="true" role="dialog">
+          <div className="modal-card">
+            <div className="text-xl font-semibold mb-2 text-white">Settings</div>
+            <div className="flex flex-col gap-4 mb-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={!isMuted}
+                  onChange={toggleMute}
+                  aria-checked={!isMuted}
+                />
+                <span>Enable alarm sound</span>
+              </label>
+              {/* Add more settings here (e.g., theme toggle) */}
+            </div>
+            <button className="btn primary w-full" onClick={() => setShowSettings(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
