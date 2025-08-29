@@ -1,49 +1,44 @@
-# Online Timer - React Application
+# ⏰ Online Timer & Stopwatch
 
-A modern, responsive online timer and stopwatch application built with React.js, featuring glassmorphism design and comprehensive functionality.
+A modern, responsive online timer and stopwatch built with React and Tailwind CSS.  
+**Live Demo:** [https://online-timer-1234.vercel.app/](https://online-timer-1234.vercel.app/)
+
+---
 
 ## 🚀 Features
 
-### Countdown Timer
-- Set custom time in HH:MM:SS or MM:SS format
-- Start, Pause, Resume, and Reset functionality
-- Visual progress ring with percentage indicator
-- Alarm sound notification when timer completes
-- Browser notifications support
+- **Countdown Timer:** Set custom time, start, pause, resume, reset, and get alarm/notification when time is up.
+- **Stopwatch:** High-precision stopwatch with lap support and statistics.
+- **Modern UI:** Glassmorphism, dark/light mode, smooth animations, and responsive design.
+- **Sound & Notifications:** Alarm sound and browser notifications when timer completes.
+- **Presets & Recents:** Quick timer presets and recent timer memory.
+- **Accessibility:** Keyboard navigation, ARIA labels, and screen reader support.
+- **PWA Ready:** Installable and works offline (if enabled).
+- **Customizable:** Easily change colors, fonts, and alarm sound.
 
-### Stopwatch
-- High precision timing with milliseconds
-- Start, Pause, and Reset controls
-- Lap timing functionality
-- Clean, modern interface
+---
 
-### Modern UI
-- Glassmorphism design with frosted glass effect
-- Dark/Light theme toggle
-- Responsive design for mobile and desktop
-- Smooth animations and transitions
-- Tailwind CSS styling
+## 🌐 Live Demo
 
-### Additional Features
-- Browser notification support
-- Alarm sound with mute/unmute
-- Persistent theme preferences
-- Keyboard shortcuts support
-- Clean, modular React components
+👉 [https://online-timer-1234.vercel.app/](https://online-timer-1234.vercel.app/)
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React.js 19.1.1
-- **Styling**: Tailwind CSS 3.4.17
-- **Build Tool**: Vite 7.1.2
-- **Icons**: Lucide React
-- **Deployment**: Vercel (recommended)
+- **Frontend:** React 18+
+- **Styling:** Tailwind CSS 3+
+- **Icons:** Lucide React
+- **Build Tool:** Vite
+- **Deployment:** Vercel
+
+---
 
 ## 📦 Installation
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/your-username/online-timer.git
    cd online-timer
    ```
 
@@ -52,54 +47,68 @@ A modern, responsive online timer and stopwatch application built with React.js,
    npm install
    ```
 
-3. **Start development server**
+3. **Start the development server**
    ```bash
    npm run dev
    ```
 
-4. **Open in browser**
-   Navigate to `http://localhost:3000`
+4. **Open in your browser**
+   - Visit [http://localhost:3000](http://localhost:3000)
+
+---
 
 ## 🏗️ Project Structure
 
 ```
 online-timer/
 ├── src/
-│   ├── components/          # React components
-│   │   ├── Countdown.jsx   # Countdown timer component
-│   │   ├── Stopwatch.jsx   # Stopwatch component
-│   │   ├── TimeInput.jsx   # Time input component
-│   │   ├── ProgressRing.jsx # Progress visualization
-│   │   ├── Header.jsx      # App header with theme toggle
-│   │   └── Tabs.jsx        # Navigation tabs
-│   ├── hooks/              # Custom React hooks
-│   │   ├── useTimer.js     # Timer functionality
-│   │   └── useAlarm.js     # Alarm and notifications
-│   ├── utils/              # Utility functions
-│   │   └── time.js         # Time formatting and calculations
-│   ├── App.jsx             # Main application component
-│   ├── main.jsx            # React entry point
-│   └── index.css           # Global styles with Tailwind
-├── public/                 # Static assets
-├── package.json           # Dependencies and scripts
-├── vite.config.js         # Vite configuration
-├── tailwind.config.cjs    # Tailwind CSS configuration
-├── postcss.config.cjs     # PostCSS configuration
-└── index.html             # HTML template
+│   ├── components/          # React components (Timer, Stopwatch, Header, etc.)
+│   ├── hooks/               # Custom React hooks (useTimer, useAlarm, etc.)
+│   ├── utils/               # Utility functions (time formatting, etc.)
+│   ├── App.jsx              # Main app component
+│   ├── main.jsx             # React entry point
+│   └── index.css            # Tailwind/global styles
+├── public/                  # Static assets (favicon, robots.txt, alarm.mp3)
+├── package.json             # Project metadata and dependencies
+├── tailwind.config.cjs      # Tailwind CSS config
+├── postcss.config.cjs       # PostCSS config
+├── vite.config.js           # Vite config
+├── index.html               # HTML template
+└── README.md                # This file
 ```
+
+---
+
+## 🔔 Alarm Sound
+
+- The timer plays an alarm sound when time is up.
+- To use your own sound, replace `public/alarm.mp3` with your preferred audio file.
+
+---
+
+## 🌙 Dark/Light Theme
+
+- Toggle between dark and light mode using the theme switch in the header.
+- Theme preference is saved in local storage.
+
+---
+
+## 🧑‍💻 Accessibility
+
+- All controls are keyboard accessible.
+- ARIA labels and roles are used for screen readers.
+
+---
 
 ## 🚀 Deployment
 
-### Vercel Deployment (Recommended)
+### Deploy to Vercel
 
-1. **Install Vercel CLI**
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Deploy to Vercel**
-   ```bash
-   vercel
+1. [Sign up for Vercel](https://vercel.com/signup) and connect your GitHub account.
+2. Import your repository and select the Vite framework.
+3. Set the build command to `npm run build` and output directory to `dist`.
+4. Deploy!  
+   Your app will be live at a URL like `https://online-timer-1234.vercel.app/`.
    ```
 
 3. **Follow the prompts**
