@@ -1,67 +1,98 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /**
- * Custom hook for countdown timer functionality
- * @param {number} initialTime - Initial time in seconds
- * @param {function} onComplete - Callback when timer completes
- * @returns {object} Timer state and controls
+ * A custom hook to manage timer logic.
+ * @param {number} initialDuration - The initial duration of the timer in seconds.
+ * @returns {object} - { timeLeft, isActive, isFinished, start, toggle, reset }
  */
-export const useCountdown = (initialTime = 0, onComplete) => {
-  const [time, setTime] = useState(initialTime);
+export function useTimer(initialDuration) {
+  const [timeLeft, setTimeLeft] = useState(initialDuration);
+  const [isActive, setIsActive] = useState(false);
+  const intervalRef = useRef(null);
+
+  // This effect handles the countdown interval.
+  // It only re-runs when `isActive` changes, making it very efficient.
+  useEffect(() => {
+    if (isActive) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev > 0) {
+            return prev - 1;
+          }
+          // Timer reached 0, so stop the interval
+          clearInterval(intervalRef.current);
+          setIsActive(false);
+          return 0;
+        });
+      }, 1000);
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    return () => clearInterval(intervalRef.current);
+  }, [isActive]);
+
+  // Derived state: the timer is finished if time is 0 and it's not active.
+  const isFinished = timeLeft === 0 && !isActive;
+
+  const start = () => {
+    if (timeLeft === 0) setTimeLeft(initialDuration);
+    setIsActive(true);
+  };
+  const toggle = () => setIsActive(!isActive);
+  const reset = () => {
+    setIsActive(false);
+    setTimeLeft(initialDuration);
+  };
+
+  return { timeLeft, isActive, isFinished, start, toggle, reset };
+}
+
+/**
+ * useCountdown - Countdown timer hook
+ * @param {number} initialSeconds - Initial countdown time in seconds
+ * @param {function} onComplete - Callback when timer reaches zero
+ */
+export function useCountdown(initialSeconds = 0, onComplete) {
+  const [time, setTime] = useState(initialSeconds);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
-    let interval;
-
-    if (isRunning && time > 0) {
-      interval = setInterval(() => {
-        setTime(prevTime => {
-          if (prevTime <= 1) {
-            setIsRunning(false);
-            if (onComplete) {
-              onComplete();
-            }
-            return 0;
-          }
-          return prevTime - 1;
+    if (isRunning && !isPaused && time > 0) {
+      intervalRef.current = setInterval(() => {
+        setTime(prev => {
+          if (prev > 1) return prev - 1;
+          clearInterval(intervalRef.current);
+          setIsRunning(false);
+          setIsPaused(false);
+          if (onComplete) onComplete();
+          return 0;
         });
       }, 1000);
     }
+    return () => clearInterval(intervalRef.current);
+  }, [isRunning, isPaused, time, onComplete]);
 
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [isRunning, time, onComplete]);
-
-  const start = useCallback(() => {
-    setIsRunning(true);
-    setIsPaused(false);
-  }, []);
-
-  const pause = useCallback(() => {
-    setIsRunning(false);
-    setIsPaused(true);
-  }, []);
-
-  const resume = useCallback(() => {
-    setIsRunning(true);
-    setIsPaused(false);
-  }, []);
-
-  const reset = useCallback(() => {
+  const start = () => {
+    if (time > 0) {
+      setIsRunning(true);
+      setIsPaused(false);
+    }
+  };
+  const pause = () => setIsPaused(true);
+  const resume = () => setIsPaused(false);
+  const reset = () => {
     setIsRunning(false);
     setIsPaused(false);
-    setTime(initialTime);
-  }, [initialTime]);
-
-  const setNewTime = useCallback((newTime) => {
+    setTime(initialSeconds);
+  };
+  const setTimeValue = (seconds) => {
+    setTime(seconds);
     setIsRunning(false);
     setIsPaused(false);
-    setTime(newTime);
-  }, []);
+  };
 
   return {
     time,
@@ -71,66 +102,39 @@ export const useCountdown = (initialTime = 0, onComplete) => {
     pause,
     resume,
     reset,
-    setTime: setNewTime
+    setTime: setTimeValue,
   };
-};
+}
 
 /**
- * Custom hook for stopwatch functionality
- * @returns {object} Stopwatch state and controls
+ * useStopwatch - Stopwatch timer hook (no laps, just time and controls)
  */
-export const useStopwatch = () => {
-  const [time, setTime] = useState(0);
+export function useStopwatch() {
   const [isRunning, setIsRunning] = useState(false);
-  const [laps, setLaps] = useState([]);
+  const [time, setTime] = useState(0);
+  const intervalRef = useRef(null);
 
   useEffect(() => {
-    let interval;
-    let startTime;
-    let elapsed = 0;
-
     if (isRunning) {
-      startTime = Date.now() - elapsed;
-      interval = setInterval(() => {
-        elapsed = Date.now() - startTime;
-        setTime(elapsed);
-      }, 10); // Update every 10ms for smooth milliseconds display
+      intervalRef.current = setInterval(() => {
+        setTime(prev => prev + 10);
+      }, 10);
     }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
+    return () => clearInterval(intervalRef.current);
   }, [isRunning]);
 
-  const start = () => {
-    setIsRunning(true);
-  };
-
-  const pause = () => {
-    setIsRunning(false);
-  };
-
+  const start = () => setIsRunning(true);
+  const pause = () => setIsRunning(false);
   const reset = () => {
     setIsRunning(false);
     setTime(0);
-    setLaps([]);
-  };
-
-  const lap = () => {
-    if (isRunning) {
-      setLaps(prevLaps => [...prevLaps, time]);
-    }
   };
 
   return {
     time,
     isRunning,
-    laps,
     start,
     pause,
     reset,
-    lap
   };
-};
+}

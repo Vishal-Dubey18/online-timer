@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Clock, Timer } from 'lucide-react';
 
 /**

@@ -1,24 +1,24 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useStopwatch } from '../hooks/useTimer';
 import { formatTimeWithMs } from '../utils/time';
 import { Play, Pause, RotateCcw, Flag } from 'lucide-react';
 
 /**
  * Stopwatch Component
- * Full-featured stopwatch with lap timing
+ * Full-featured stopwatch with lap timing and modern UI
  */
 const Stopwatch = () => {
   const {
     time,
     isRunning,
-    laps,
     start,
     pause,
     reset,
-    lap
   } = useStopwatch();
 
-  const [showLaps, setShowLaps] = useState(false);
+  // Lap logic: store lap intervals and total times
+  const [laps, setLaps] = useState([]);
+  const lastLapTimeRef = useRef(0);
 
   const handleStartPause = () => {
     if (isRunning) {
@@ -30,114 +30,72 @@ const Stopwatch = () => {
 
   const handleReset = () => {
     reset();
-    setShowLaps(false);
+    setLaps([]);
+    lastLapTimeRef.current = 0;
   };
 
   const handleLap = () => {
-    if (isRunning) {
-      lap();
-      setShowLaps(true);
-    }
+    if (!isRunning) return;
+    const lapTime = time - lastLapTimeRef.current;
+    setLaps(prev => [
+      {
+        lap: prev.length + 1,
+        lapTime,
+        totalTime: time,
+      },
+      ...prev,
+    ]);
+    lastLapTimeRef.current = time;
   };
 
   return (
-    <div className="glass-card p-8 max-w-md mx-auto">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Stopwatch</h2>
-        <p className="text-gray-300">Track time with precision</p>
-      </div>
-
+    <div className="glass-card max-w-md mx-auto fade-in">
       {/* Time Display */}
-      <div className="text-center mb-6">
-        <div className="text-5xl font-mono font-bold text-white mb-2 no-select">
-          {formatTimeWithMs(time)}
-        </div>
-        <div className="text-sm text-gray-400">
-          {laps.length} lap{laps.length !== 1 ? 's' : ''} recorded
-        </div>
+      <div className="time-big mt-4 mb-2">
+        {formatTimeWithMs(time)}
       </div>
 
       {/* Controls */}
-      <div className="flex justify-center gap-3 mb-6">
+      <div className="controls mb-2">
         <button
           onClick={handleStartPause}
-          className={`glass-button flex items-center gap-2 ${
-            isRunning 
-              ? 'bg-yellow-500 hover:bg-yellow-600' 
-              : 'bg-green-500 hover:bg-green-600'
-          }`}
+          className={`btn ${isRunning ? 'warn' : 'success'}`}
         >
-          {isRunning ? (
-            <>
-              <Pause size={16} />
-              Pause
-            </>
-          ) : (
-            <>
-              <Play size={16} />
-              Start
-            </>
-          )}
+          {isRunning ? <Pause size={18} /> : <Play size={18} />}
+          {isRunning ? 'Pause' : 'Start'}
         </button>
-
         <button
           onClick={handleLap}
           disabled={!isRunning}
-          className="glass-button flex items-center gap-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn"
         >
-          <Flag size={16} />
-          Lap
+          <Flag size={18} /> Lap
         </button>
-
         <button
           onClick={handleReset}
-          className="glass-button flex items-center gap-2 bg-gray-600 hover:bg-gray-700"
+          className="btn danger"
         >
-          <RotateCcw size={16} />
-          Reset
+          <RotateCcw size={18} /> Reset
         </button>
       </div>
 
-      {/* Laps Section */}
-      {laps.length > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-white">Lap Times</h3>
-            <button
-              onClick={() => setShowLaps(!showLaps)}
-              className="text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              {showLaps ? 'Hide' : 'Show'}
-            </button>
-          </div>
-
-          {showLaps && (
-            <div className="max-h-48 overflow-y-auto">
-              <div className="space-y-2">
-                {laps.map((lapTime, index) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/10"
-                  >
-                    <span className="text-gray-300">Lap {index + 1}</span>
-                    <span className="font-mono text-white">
-                      {formatTimeWithMs(lapTime)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <div className="text-center">
-        <div className="text-xs text-gray-400">
-          {isRunning ? 'Running...' : 'Ready to start'}
-        </div>
+      {/* Status Text */}
+      <div className="text-center text-xs text-gray-400 mt-2 mb-2">
+        {isRunning ? 'Running...' : 'Ready'}
       </div>
+
+      {/* Laps List */}
+      {laps.length > 0 && (
+        <ul className="laps" aria-label="Lap times">
+          {laps.map((lap, idx) => (
+            <li key={laps.length - idx}>
+              <span>Lap {lap.lap}</span>
+              <span className="pill">{formatTimeWithMs(lap.lapTime)}</span>
+              <span className="pill">Total {formatTimeWithMs(lap.totalTime)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

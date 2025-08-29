@@ -16,13 +16,8 @@ const TimeInput = ({ onTimeSet, placeholder = 'MM:SS or HH:MM:SS', className = '
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInputValue(value);
-    
-    // Validate input format
-    if (value === '' || isValidTimeFormat(value)) {
-      setIsValid(true);
-    } else {
-      setIsValid(false);
-    }
+    if (value === '' || isValidTimeFormat(value)) setIsValid(true);
+    else setIsValid(false);
   };
 
   const handleSetTime = () => {
@@ -34,9 +29,7 @@ const TimeInput = ({ onTimeSet, placeholder = 'MM:SS or HH:MM:SS', className = '
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSetTime();
-    }
+    if (e.key === 'Enter') handleSetTime();
   };
 
   return (

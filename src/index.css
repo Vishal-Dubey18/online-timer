@@ -2,34 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom glassmorphism styles */
 @layer components {
   .glass-card {
-    @apply bg-glass border border-glassBorder backdrop-blur-xs rounded-2xl shadow-2xl;
+    @apply rounded-3xl shadow-xl bg-white/10 border border-white/20 backdrop-blur-md transition-all duration-300;
   }
   
-  .glass-button {
-    @apply bg-glass border border-glassBorder backdrop-blur-xs rounded-xl px-4 py-2 
-           transition-all duration-200 hover:bg-opacity-20 hover:scale-105 
-           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  .timer-button {
+    @apply px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white 
+           transition-all duration-200 flex items-center gap-2 font-medium;
+  }
+  
+  .timer-display {
+    @apply text-6xl font-bold text-center text-white mb-8 font-mono tracking-wider;
   }
   
   .glass-input {
-    @apply bg-glass border border-glassBorder backdrop-blur-xs rounded-xl px-4 py-2 
-           focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200;
+    @apply bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition;
+  }
+  .glass-button {
+    @apply rounded-xl px-4 py-2 font-semibold shadow bg-white/10 border border-white/20 text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .glass-button:active {
+    transform: scale(0.97);
+  }
+  
+  .time-big {
+    @apply text-center text-6xl md:text-7xl font-mono font-bold select-none text-white drop-shadow-lg tracking-widest;
+    letter-spacing: 0.08em;
+  }
+  
+  .laps {
+    @apply mt-4 max-h-48 overflow-y-auto space-y-2;
+  }
+  .laps li {
+    @apply flex justify-between items-center bg-white/10 rounded-lg px-4 py-2 border border-white/10;
+  }
+  .pill {
+    @apply bg-blue-500/20 text-blue-200 rounded-full px-3 py-1 text-xs font-mono ml-2;
+  }
+  
+  .controls {
+    @apply flex flex-wrap justify-center gap-3 mt-6 mb-2;
+  }
+  .btn {
+    @apply glass-button min-w-[90px] text-base;
+  }
+  .btn.primary {
+    @apply bg-blue-500/80 hover:bg-blue-600/90;
+  }
+  .btn.success {
+    @apply bg-green-500/80 hover:bg-green-600/90;
+  }
+  .btn.warn {
+    @apply bg-yellow-500/80 hover:bg-yellow-600/90;
+  }
+  .btn.danger {
+    @apply bg-red-500/80 hover:bg-red-600/90;
+  }
+  .btn:disabled {
+    @apply opacity-50 cursor-not-allowed;
   }
 }
 
-/* Smooth animations */
-@layer utilities {
-  .animate-pulse-slow {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
+/* Base styles */
+body {
+  @apply antialiased text-gray-100;
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  @apply w-2;
 }
 
 ::-webkit-scrollbar-track {
@@ -46,4 +89,44 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+/* Additional layout fixes */
+body {
+  @apply flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white;
+}
+
+#root {
+  @apply flex-grow flex flex-col;
+}
+
+main {
+  @apply flex-grow max-w-4xl mx-auto w-full mt-6 p-6 bg-gray-800 rounded-lg shadow-lg;
+}
+
+footer {
+  @apply text-center mt-8 text-gray-400 text-sm;
+}
+
+h1, h2, h3 {
+  @apply font-bold;
+}
+
+button {
+  @apply cursor-pointer;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.95);}
+  to { opacity: 1; transform: scale(1);}
+}
+.fade-in {
+  animation: fade-in 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px) {
+  .glass-card { padding: 1.25rem !important; }
+  .time-big { font-size: 2.5rem !important; }
 }
