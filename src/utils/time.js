@@ -19,6 +19,24 @@ export const formatTime = (seconds) => {
 };
 
 /**
+ * Format time in milliseconds to HH:MM:SS:MS format
+ * @param {number} milliseconds - Total milliseconds
+ * @returns {string} Formatted time string with milliseconds
+ */
+export const formatTimeWithMs = (milliseconds) => {
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const ms = Math.floor((milliseconds % 1000) / 10); // Show 2-digit milliseconds
+
+  if (hours > 0) {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+  }
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+};
+
+/**
  * Parse time string (HH:MM:SS or MM:SS) to seconds
  * @param {string} timeString - Time string to parse
  * @returns {number} Total seconds
